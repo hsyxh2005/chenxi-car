@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>登山赛车 - 晨曦游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #2c3e50, #1a1a2e);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: manipulation;
+        }
+        
+        #game-container {
+            width: 100%;
+            max-width: 800px;
+            height: 100vh;
+            max-height: 450px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
+        }
+        
+        .menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 10;
+            transition: opacity 0.5s;
+            padding: 20px;
+        }
+        
+        .menu.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .title {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            margin: 10px;
+            width: 200px;
+            background: linear-gradient(to right, #ff6b6b, #ff8e53);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 10px rgba(255, 107, 107, 0.4);
+        }
+        
+        .about-content {
+            background: rgba(30, 30, 50, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 90%;
+            margin: 15px 0;
+            text-align: center;
+            line-height: 1.6;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        
+        .about-content h3 {
+            margin: 15px 0 10px;
+            color: #4facfe;
+        }
+        
+        .back-btn {
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+            margin-top: 15px;
+        }
+        
+        .game-ui {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 5;
+        }
+        
+        .score {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            z-index: 5;
+        }
+        
+        .control-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            color: white;
+            border: 2px solid white;
+            touch-action: manipulation;
+        }
+        
+        .control-btn:active {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            border-radius: 50%;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 154, 158, 0.8);
+        }
+        
+        .version {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .pause-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.2rem;
+            z-index: 5;
+        }
+        
+        .tutorial {
+            background: rgba(30, 30, 50, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: left;
+            max-width: 90%;
+        }
+        
+        .tutorial h3 {
+            color: #ffcc00;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .tutorial p {
+            margin: 5px 0;
+        }
+        
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        
+        .mode-btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid #ffcc00;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .mode-btn.active {
+            background: #ffcc00;
+            color: #2c3e50;
+        }
+        
+        @media screen and (orientation: landscape) {
+            body {
+                padding: 10px;
+            }
+            
+            #game-container {
+                max-width: 100%;
+                max-height: 90vh;
+            }
+            
+            .controls {
+                bottom: 10px;
+                padding: 5px;
+            }
+            
+            .control-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 1.3rem;
+            }
+            
+            .game-ui {
+                top: 10px;
+                padding: 5px;
+            }
+            
+            .score {
+                padding: 8px 15px;
+                font-size: 1rem;
+            }
+            
+            .menu {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                align-content: center;
+            }
+            
+            .menu-content {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 50%;
+                padding: 10px;
+            }
+            
+            .tutorial, .about-content {
+                max-width: 95%;
+                margin: 10px 0;
+                font-size: 0.9rem;
+            }
+            
+            .btn {
+                padding: 12px 25px;
+                width: 180px;
+                font-size: 1.1rem;
+            }
+        }
+        
+        @media screen and (orientation: portrait) {
+            #game-container {
+                max-height: 85vh;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+            
+            .btn {
+                padding: 12px 25px;
+                width: 180px;
+                font-size: 1.1rem;
+            }
+            
+            .logo {
+                width: 100px;
+                height: 100px;
+                font-size: 2.5rem;
+            }
+        }
+        
+        #orientation-warning {
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 20;
+            display: none;
+        }
+        
+        @media screen and (orientation: portrait) and (max-height: 600px) {
+            #orientation-warning {
+                display: flex;
+            }
+        }
+        
+        #game-over-menu {
+            background: rgba(0, 0, 0, 0.9);
+        }
+        
+        .game-over-stats {
+            background: rgba(30, 30, 50, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        
+        <div class="game-ui">
+            <div class="score">距离: <span id="distance">0</span>m</div>
+            <div class="score">金币: <span id="coins">0</span></div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-btn" id="left-btn">←</div>
+            <div class="control-btn" id="right-btn">→</div>
+            <div class="control-btn" id="up-btn">↑</div>
+        </div>
+        
+        <div class="pause-btn" id="pause-btn">❚❚</div>
+        
+        <div id="main-menu" class="menu">
+            <div class="menu-content">
+                <div class="logo">🚗</div>
+                <h1 class="title">登山赛车</h1>
+                
+                <div class="mode-selector">
+                    <div class="mode-btn active" data-mode="easy">简单模式</div>
+                    <div class="mode-btn" data-mode="hard">困难模式</div>
+                </div>
+                
+                <button class="btn" id="start-btn">开始游戏</button>
+                <button class="btn" id="about-btn">关于游戏</button>
+                <div class="version">v1.2.0 | 开发者: 天际的晨曦</div>
+            </div>
+            
+            <div class="menu-content">
+                <div class="tutorial">
+                    <h3>游戏控制</h3>
+                    <p>← 刹车/保持平衡</p>
+                    <p>→ 加速/前进</p>
+                    <p>↑ 跳跃</p>
+                    <p><strong>简单模式:</strong> 无翻车风险</p>
+                    <p><strong>困难模式:</strong> 加速过快会翻车</p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="orientation-warning" class="menu hidden">
+            <div class="about-content">
+                <h2>请横屏游戏</h2>
+                <p>为了获得最佳游戏体验，请将设备旋转至横屏模式</p>
+            </div>
+        </div>
+        
+        <div id="about-menu" class="menu hidden">
+            <h1 class="title">关于游戏</h1>
+            <div class="about-content">
+                <p>晨曦登山赛车是一款基于物理引擎的休闲游戏，控制车辆在复杂地形中行驶，尽可能获得更高分数。</p>
+                <p>开发者: 天际的晨曦</p>
+                <p>版本: v1.2.0</p>
+                <p>Copyright © 2025 @hsy2005（天际的晨曦）| All Rights Reserved.</p>
+                <p>版权所有，侵权必究。</p>
+                <h3>更新日志</h3>
+                <p>v1.2.0 (2025.9.15)<br>- 添加简单/困难双模式<br>- 增加金币收集系统<br>- 优化横竖屏适配</p>
+                <p>v1.1.0 (2025.9.14)<br>- 添加无限地形生成<br>- 优化地形生成算法</p>
+                <p>v1.0.0 (2025.9.14)<br>晨曦登山赛车APP上线，此游戏借鉴登山赛车游戏，做出的一个简化的定制版本</p>
+            </div>
+            <button class="btn back-btn" id="back-btn">返回主菜单</button>
+        </div>
+        
+        <div id="pause-menu" class="menu hidden">
+            <h1 class="title">游戏暂停</h1>
+            <button class="btn" id="resume-btn">继续游戏</button>
+            <button class="btn" id="restart-btn">重新开始</button>
+            <button class="btn back-btn" id="menu-btn">返回主菜单</button>
+        </div>
+        
+        <div id="game-over-menu" class="menu hidden">
+            <h1 class="title">游戏结束</h1>
+            <div class="game-over-stats">
+                <p>行驶距离: <span id="final-distance">0</span>m</p>
+                <p>收集金币: <span id="final-coins">0</span></p>
+                <p>翻车原因: <span id="crash-reason">速度过快</span></p>
+            </div>
+            <button class="btn" id="retry-btn">再试一次</button>
+            <button class="btn back-btn" id="game-over-menu-btn">返回主菜单</button>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        const gameState = {
+            MENU: 0,
+            PLAYING: 1,
+            PAUSED: 2,
+            ABOUT: 3,
+            GAME_OVER: 4
+        };
+        
+        let currentState = gameState.MENU;
+        let canvas, ctx;
+        let car = { 
+            x: 50, 
+            y: 300, 
+            width: 60, 
+            height: 30, 
+            velocity: 0, 
+            rotation: 0,
+            onGround: false,
+            jumpPower: 0,
+            balance: 0 // 车辆平衡值
+        };
+        
+        let terrain = [];
+        let coins = [];
+        let score = 0;
+        let collectedCoins = 0;
+        let lastTimestamp = 0;
+        let leftPressed = false;
+        let rightPressed = false;
+        let upPressed = false;
+        let lastTerrainX = 0;
+        let maxTerrainPoints = 100;
+        let gameMode = "easy"; // 游戏模式：easy或hard
+        let crashReason = "";
+        
+        // 初始化游戏
+        function initGame() {
+            canvas = document.getElementById('game-canvas');
+            ctx = canvas.getContext('2d');
+            
+            // 设置Canvas尺寸
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // 生成初始地形
+            generateInitialTerrain();
+            
+            // 添加事件监听器
+            document.getElementById('start-btn').addEventListener('click', startGame);
+            document.getElementById('about-btn').addEventListener('click', showAbout);
+            document.getElementById('back-btn').addEventListener('click', showMainMenu);
+            document.getElementById('pause-btn').addEventListener('click', togglePause);
+            document.getElementById('resume-btn').addEventListener('click', togglePause);
+            document.getElementById('restart-btn').addEventListener('click', restartGame);
+            document.getElementById('menu-btn').addEventListener('click', showMainMenu);
+            document.getElementById('retry-btn').addEventListener('click', restartGame);
+            document.getElementById('game-over-menu-btn').addEventListener('click', showMainMenu);
+            
+            // 模式选择按钮
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    gameMode = this.getAttribute('data-mode');
+                });
+            });
+            
+            // 控制按钮事件
+            document.getElementById('left-btn').addEventListener('touchstart', () => leftPressed = true);
+            document.getElementById('left-btn').addEventListener('touchend', () => leftPressed = false);
+            document.getElementById('right-btn').addEventListener('touchstart', () => rightPressed = true);
+            document.getElementById('right-btn').addEventListener('touchend', () => rightPressed = false);
+            document.getElementById('up-btn').addEventListener('touchstart', () => upPressed = true);
+            document.getElementById('up-btn').addEventListener('touchend', () => upPressed = false);
+            
+            // 键盘控制事件
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+            
+            // 添加屏幕方向变化监听
+            window.addEventListener('orientationchange', function() {
+                setTimeout(function() {
+                    resizeCanvas();
+                    checkOrientation();
+                }, 200);
+            });
+            
+            // 添加窗口大小变化监听
+            window.addEventListener('resize', function() {
+                setTimeout(function() {
+                    resizeCanvas();
+                    checkOrientation();
+                }, 200);
+            });
+            
+            // 初始检查屏幕方向
+            checkOrientation();
+            
+            // 开始游戏循环
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // 调整Canvas大小
+        function resizeCanvas() {
+            const container = document.getElementById('game-container');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            
+            // 重新生成地形以适应新尺寸
+            if (terrain.length > 0) {
+                generateInitialTerrain();
+            }
+        }
+        
+        // 生成初始地形
+        function generateInitialTerrain() {
+            terrain = [];
+            coins = [];
+            let height = canvas.height * 0.7;
+            let x = 0;
+            
+            // 起始平坦区域（从5个点增加到10个点）
+            for (let i = 0; i < 10; i++) {  // 从5改为10
+                terrain.push({ x: x, y: height });
+                x += 30;
+            }
+            
+            // 生成初始地形点
+            for (let i = 0; i < maxTerrainPoints; i++) {
+                terrain.push({ x: x, y: height });
+                x = generateNextTerrainPoint(x, height).x;
+                height = generateNextTerrainPoint(x, height).y;
+                
+                // 随机生成金币
+                if (Math.random() < 0.2 && x > 200) {
+                    coins.push({
+                        x: x,
+                        y: height - 40 - Math.random() * 30,
+                        collected: false
+                    });
+                }
+            }
+            
+            lastTerrainX = terrain[terrain.length - 1].x;
+        }
+        
+        // 生成下一个地形点
+        function generateNextTerrainPoint(currentX, currentHeight) {
+            let nextX = currentX;
+            let nextHeight = currentHeight;
+            
+            // 在前200距离内生成更平缓的地形
+            if (currentX < 200) {  // 添加这个条件
+                // 平缓区域的高度变化较小
+                let heightChange = Math.random() * 10 - 5;  // -5 到 5 之间的随机值
+                nextHeight += heightChange;
+            } else {
+                // 随机决定下一个点的高度变化
+                let heightChange = 0;
+                
+                // 30%几率生成陡坡
+                if (Math.random() < 0.3) {
+                    heightChange = Math.random() * 50 - 25; // -25 到 25 之间的随机值
+                } else {
+                    heightChange = Math.random() * 30 - 15; // -15 到 15 之间的随机值
+                }
+                
+                nextHeight += heightChange;
+            }
+            
+            // 限制高度在合理范围内
+            if (nextHeight < canvas.height * 0.4) nextHeight = canvas.height * 0.4;
+            if (nextHeight > canvas.height * 0.8) nextHeight = canvas.height * 0.8;
+            
+            // 随机决定下一个点的水平距离
+            nextX += Math.random() * 40 + 20;
+            
+            return { x: nextX, y: nextHeight };
+        }
+        
+        // 扩展地形
+        function extendTerrain() {
+            // 当车辆接近地形末端时，扩展地形
+            if (car.x > lastTerrainX - canvas.width) {
+                let currentHeight = terrain[terrain.length - 1].y;
+                let currentX = lastTerrainX;
+                
+                // 移除视野外的地形点和金币
+                if (terrain.length > maxTerrainPoints) {
+                    terrain = terrain.filter(point => point.x > car.x - canvas.width);
+                    coins = coins.filter(coin => coin.x > car.x - canvas.width);
+                }
+                
+                // 添加新的地形点
+                for (let i = 0; i < 20; i++) {
+                    let nextPoint = generateNextTerrainPoint(currentX, currentHeight);
+                    terrain.push({ x: nextPoint.x, y: nextPoint.y });
+                    currentX = nextPoint.x;
+                    currentHeight = nextPoint.y;
+                    
+                    // 随机生成金币
+                    if (Math.random() < 0.2) {
+                        coins.push({
+                            x: currentX,
+                            y: currentHeight - 40 - Math.random() * 30,
+                            collected: false
+                        });
+                    }
+                }
+                
+                lastTerrainX = currentX;
+            }
+        }
+        
+        // 检查金币收集
+        function checkCoinCollection() {
+            for (let i = 0; i < coins.length; i++) {
+                let coin = coins[i];
+                if (!coin.collected) {
+                    // 检查车辆是否接触到金币
+                    let dx = Math.abs(car.x - coin.x);
+                    let dy = Math.abs((car.y + car.height/2) - coin.y);
+                    
+                    if (dx < 30 && dy < 30) {
+                        coin.collected = true;
+                        collectedCoins++;
+                        document.getElementById('coins').textContent = collectedCoins;
+                    }
+                }
+            }
+        }
+        
+        // 检查是否翻车
+        function checkCarFlip() {
+            if (gameMode === "easy") return false;
+            
+            // 真正的翻车检测：车辆旋转角度超过90度（π/2）
+            if (Math.abs(car.rotation) > Math.PI / 2) {
+                crashReason = "翻车: 车辆失去平衡";
+                return true;
+            }
+            
+            // 检查车辆是否飞出屏幕
+            if (car.y > canvas.height + 100) {
+                crashReason = "翻车: 飞出赛道";
+                return true;
+            }
+            
+            // 检查车辆是否倒置（车顶朝下）
+            let isUpsideDown = Math.abs(car.rotation) > Math.PI / 4 && 
+                               ((car.rotation > 0 && car.velocity > 2) || 
+                                (car.rotation < 0 && car.velocity < -2));
+            
+            if (isUpsideDown) {
+                crashReason = "翻车: 车辆倒置";
+                return true;
+            }
+            
+            return false;
+        }
+        
+        // 游戏结束
+        function gameOver() {
+            currentState = gameState.GAME_OVER;
+            document.getElementById('final-distance').textContent = score;
+            document.getElementById('final-coins').textContent = collectedCoins;
+            document.getElementById('crash-reason').textContent = crashReason;
+            document.getElementById('game-over-menu').classList.remove('hidden');
+        }
+        
+        // 游戏主循环
+        function gameLoop(timestamp) {
+            // 计算时间增量，使游戏速度与帧率无关
+            const deltaTime = lastTimestamp ? (timestamp - lastTimestamp) / 16.67 : 1;
+            lastTimestamp = timestamp;
+            
+            if (currentState === gameState.PLAYING) {
+                update(deltaTime);
+            }
+            
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+        
+                // 更新游戏状态
+                function update(deltaTime) {
+                    // 扩展地形
+                    extendTerrain();
+                    
+                    // 应用控制输入
+                    if (leftPressed) {
+                        // 左键：刹车和保持平衡
+                        car.velocity -= 0.15 * deltaTime;
+                        car.balance -= 0.2 * deltaTime; // 保持平衡
+                    }
+                    if (rightPressed) {
+                        // 右键：加速
+                        car.velocity += 0.1 * deltaTime;
+                        car.balance += 0.3 * deltaTime; // 加速时增加不平衡
+                    }
+                    if (upPressed && car.onGround) {
+                        car.jumpPower = 15;
+                        car.onGround = false;
+                    }
+                    
+                    // 限制最大速度
+                    if (car.velocity > 5) car.velocity = 5;
+                    if (car.velocity < -3) car.velocity = -3;
+                    
+                    // 限制平衡值范围
+                    if (car.balance > 10) car.balance = 10;
+                    if (car.balance < -10) car.balance = -10;
+                    
+                    // 自然平衡恢复
+                    if (!leftPressed && !rightPressed) {
+                        car.balance *= 0.95;
+                    }
+                    
+                    // 应用跳跃
+                    if (car.jumpPower > 0) {
+                        car.y -= car.jumpPower * deltaTime;
+                        car.jumpPower -= 0.5 * deltaTime;
+                    } else {
+                        // 重力
+                        if (!car.onGround) {
+                            car.y += 5 * deltaTime;
+                        }
+                    }
+                    
+                    // 更新车辆位置
+                    car.x += car.velocity * deltaTime;
+                    
+                    // 确保车辆不会超出左边界
+                    if (car.x < 50) {
+                        car.x = 50;
+                        car.velocity = 0;
+                    }
+                    
+                    // 确保车辆在地形上
+                    let currentTerrain = findCurrentTerrain();
+                    if (currentTerrain) {
+                        let groundY = currentTerrain.y - car.height;
+                        
+                        if (car.y >= groundY) {
+                            car.y = groundY;
+                            car.onGround = true;
+                            car.jumpPower = 0;
+                    
+                            // 修改平衡系统
+                            if (gameMode === "hard") {
+                                // 速度越快，越难保持平衡
+                                let speedEffect = Math.abs(car.velocity) * 0.1;
+                                
+                                if (leftPressed) {
+                                    // 左键：保持平衡（抵消速度带来的不稳定）
+                                    car.balance -= (0.2 + speedEffect) * deltaTime;
+                                }
+                                if (rightPressed) {
+                                    // 右键：加速（增加不稳定性）
+                                    car.balance += (0.3 + speedEffect) * deltaTime;
+                                }
+                                
+                                // 自然平衡恢复（比简单模式慢）
+                                if (!leftPressed && !rightPressed) {
+                                    car.balance *= 0.9;
+                                }
+                                
+                                // 平衡值影响车辆旋转
+                                car.rotation += car.balance * 0.01 * deltaTime;
+                            }
+                            
+                            // 在应用控制输入后添加速度导致的翻车风险
+                            if (gameMode === "hard") {
+                                // 高速行驶时更容易翻车
+                                if (Math.abs(car.velocity) > 3 && Math.abs(car.rotation) > 0.3) {
+                                    // 根据速度和旋转角度增加翻车风险
+                                    let flipRisk = (Math.abs(car.velocity) - 3) * Math.abs(car.rotation) * 0.1;
+                                    
+                                    // 如果左键没有按下保持平衡，增加翻车风险
+                                    if (!leftPressed) {
+                                        flipRisk *= 1.5;
+                                    }
+                                    
+                                    // 随机决定是否翻车
+                                    if (Math.random() < flipRisk * deltaTime) {
+                                        // 模拟翻车：给车辆一个旋转力
+                                        car.rotation += (car.rotation > 0 ? 0.1 : -0.1) * car.velocity * deltaTime;
+                                    }
+                                }
+                            }
+                        }
+                    } // <-- 这是 if (currentTerrain) 的闭合大括号
+                    
+                    // 检查金币收集
+                    checkCoinCollection();
+                    
+                    // 检查是否翻车
+                    if (checkCarFlip()) {
+                        gameOver();
+                        return;
+                    }
+                    
+                    // 更新分数
+                    score = Math.floor(car.x / 5);
+                    document.getElementById('distance').textContent = score;
+                }
+        
+        // 查找当前地形点
+        function findCurrentTerrain() {
+            for (let i = 0; i < terrain.length - 1; i++) {
+                if (car.x >= terrain[i].x && car.x < terrain[i+1].x) {
+                    // 线性插值计算y坐标
+                    let t = (car.x - terrain[i].x) / (terrain[i+1].x - terrain[i].x);
+                    return {
+                        x: car.x,
+                        y: terrain[i].y + t * (terrain[i+1].y - terrain[i].y)
+                    };
+                }
+            }
+            return null;
+        }
+        
+        // 渲染游戏
+        function render() {
+            // 清除画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制天空
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制云朵
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            for (let i = 0; i < 5; i++) {
+                let x = (car.x * 0.1 + i * 200) % (canvas.width + 200) - 100;
+                let y = 50 + Math.sin(car.x * 0.01 + i) * 20;
+                drawCloud(x, y);
+            }
+            
+            // 绘制地形
+            ctx.save();
+            ctx.translate(-car.x + canvas.width/3, 0);
+            
+            // 绘制地形表面
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            for (let point of terrain) {
+                ctx.lineTo(point.x, point.y);
+            }
+            ctx.lineTo(terrain[terrain.length-1].x, canvas.height);
+            ctx.closePath();
+            ctx.fillStyle = '#8BC34A';
+            ctx.fill();
+            
+            // 绘制道路细节
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            for (let point of terrain) {
+                ctx.lineTo(point.x, point.y + 10);
+            }
+            ctx.lineTo(terrain[terrain.length-1].x, canvas.height);
+            ctx.closePath();
+            ctx.fillStyle = '#795548';
+            ctx.fill();
+            
+            // 绘制金币
+            for (let coin of coins) {
+                if (!coin.collected && coin.x > car.x - canvas.width && coin.x < car.x + canvas.width * 1.5) {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.arc(coin.x, coin.y, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.strokeStyle = '#D4AF37';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+            
+            // 绘制车辆
+            ctx.save();
+            ctx.translate(car.x, car.y + car.height/2);
+            ctx.rotate(car.rotation);
+            
+            // 车身
+            ctx.fillStyle = '#FF5722';
+            ctx.fillRect(-car.width/2, -car.height/2, car.width, car.height);
+            
+            // 车轮
+            ctx.fillStyle = '#212121';
+            ctx.fillRect(-car.width/2 - 5, -car.height/2 - 5, 10, 10);
+            ctx.fillRect(car.width/2 - 5, -car.height/2 - 5, 10, 10);
+            ctx.fillRect(-car.width/2 - 5, car.height/2 - 5, 10, 10);
+            ctx.fillRect(car.width/2 - 5, car.height/2 - 5, 10, 10);
+            
+            // 车窗
+            ctx.fillStyle = '#B3E5FC';
+            ctx.fillRect(-car.width/4, -car.height/4, car.width/2, car.height/4);
+            
+            ctx.restore();
+            ctx.restore();
+        }
+        
+        // 绘制云朵
+        function drawCloud(x, y) {
+            ctx.beginPath();
+            ctx.arc(x, y, 20, 0, Math.PI * 2);
+            ctx.arc(x + 15, y - 10, 15, 0, Math.PI * 2);
+            ctx.arc(x + 30, y, 20, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        // 显示关于菜单
+        function showAbout() {
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('about-menu').classList.remove('hidden');
+            currentState = gameState.ABOUT;
+        }
+        
+        // 显示主菜单
+        function showMainMenu() {
+            document.getElementById('about-menu').classList.add('hidden');
+            document.getElementById('pause-menu').classList.add('hidden');
+            document.getElementById('game-over-menu').classList.add('hidden');
+            document.getElementById('main-menu').classList.remove('hidden');
+            currentState = gameState.MENU;
+        }
+        
+        // 开始游戏
+        function startGame() {
+            document.getElementById('main-menu').classList.add('hidden');
+            currentState = gameState.PLAYING;
+            
+            // 重置游戏状态
+            car = { 
+                x: 50, 
+                y: 300, 
+                width: 60, 
+                height: 30, 
+                velocity: 0, 
+                rotation: 0,  // 确保初始旋转角度为0
+                onGround: false,
+                jumpPower: 0,
+                balance: 0
+            };
+            score = 0;
+            collectedCoins = 0;
+            generateInitialTerrain();
+            
+            // 更新UI
+            document.getElementById('distance').textContent = score;
+            document.getElementById('coins').textContent = collectedCoins;
+        }
+        
+        // 切换暂停状态
+        function togglePause() {
+            if (currentState === gameState.PLAYING) {
+                document.getElementById('pause-menu').classList.remove('hidden');
+                currentState = gameState.PAUSED;
+            } else if (currentState === gameState.PAUSED) {
+                document.getElementById('pause-menu').classList.add('hidden');
+                currentState = gameState.PLAYING;
+            }
+        }
+        
+        // 重新开始游戏
+        function restartGame() {
+            document.getElementById('pause-menu').classList.add('hidden');
+            document.getElementById('game-over-menu').classList.add('hidden');
+            startGame();
+        }
+        
+        // 键盘按下事件处理
+        function handleKeyDown(e) {
+            if (currentState !== gameState.PLAYING) return;
+            
+            if (e.key === 'ArrowLeft') {
+                leftPressed = true;
+            } else if (e.key === 'ArrowRight') {
+                rightPressed = true;
+            } else if (e.key === 'ArrowUp') {
+                upPressed = true;
+            } else if (e.key === 'Escape' || e.key === 'p') {
+                togglePause();
+            }
+        }
+        
+        // 键盘释放事件处理
+        function handleKeyUp(e) {
+            if (e.key === 'ArrowLeft') {
+                leftPressed = false;
+            } else if (e.key === 'ArrowRight') {
+                rightPressed = false;
+            } else if (e.key === 'ArrowUp') {
+                upPressed = false;
+            }
+        }
+        
+        // 横屏检测函数
+        function checkOrientation() {
+            if (window.innerHeight > window.innerWidth && window.innerHeight < 600) {
+                // 竖屏且高度较小（可能是手机竖屏）
+                document.getElementById('orientation-warning').classList.remove('hidden');
+            } else {
+                // 横屏或大屏幕
+                document.getElementById('orientation-warning').classList.add('hidden');
+            }
+        }
+        
+        // 初始化游戏
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>
